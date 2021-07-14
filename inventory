@@ -1,0 +1,6 @@
+[broker]
+<cluster-a-public-ip> pod_cidr=10.44.0.0 service_cidr=10.45.0.0 cluster_name=cluster-a
+
+[managed]
+<cluster-b-public-ip> pod_cidr=10.144.0.0 service_cidr=10.145.0.0 cluster_name=cluster-b
+<cluster-c-public-ip> pod_cidr=10.244.0.0 service_cidr=10.245.0.0 cluster_name=cluster-c
