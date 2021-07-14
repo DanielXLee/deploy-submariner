@@ -2,16 +2,16 @@
 
 ## 部署之前
 
-在本地机器安装 `ansible`
+1. 在本地机器安装 `ansible`
 
-MacOS: `brew install ansible`
-Ubuntu: [installing-ansible-on-ubuntu](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-on-ubuntu)
-CentOS: [installing-ansible-on-rhel-centos-or-fedora](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-on-rhel-centos-or-fedora)
+   - MacOS: `brew install ansible`
+   - Ubuntu: [installing-ansible-on-ubuntu](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-on-ubuntu)
+   - CentOS: [installing-ansible-on-rhel-centos-or-fedora](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-on-rhel-centos-or-fedora)
 
-准备 >= 2 个 Ubuntu 的节点，将本地节点的 `~/.ssh/id_rsa.pub` 添加到准好的节点 `root` 用户下的 `/root/.ssh/authorized_keys` 的文件里，让本地几点可以无密码访问远端节点。
+1. 准备 >= 2 个 Ubuntu 的节点，将本地节点的 `~/.ssh/id_rsa.pub` 添加到准好的节点 `root` 用户下的 `/root/.ssh/authorized_keys` 的文件里，让本地机器可以无密码访问远端节点。
 
-- CPU >= 2 cores
-- Memory >= 4G
+   - CPU >= 2 cores
+   - Memory >= 4G
 
 后面的脚本会用这几个节点来搭建 k8s 集群，并部署 submariner，将所有的节点 join 到 submariner 的 broker。
 
