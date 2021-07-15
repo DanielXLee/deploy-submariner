@@ -1,74 +1,8 @@
 ---
-- hosts: all
-  gather_facts: False
-  name: Copy scripts to all nodes
-  remote_user: root
-  tasks:
-  - name: Copy submariner script to remote node
-    ansible.builtin.copy:
-      src: setup-k8s-cluster.sh
-      dest: /root/setup-k8s-cluster.sh
-      mode: '0755'
-  - name: Copy deploy broker script to remote node
-    ansible.builtin.copy:
-      src: deploy-broker.sh
-      dest: /root/deploy-broker.sh
-      mode: '0755'
-  - name: Copy join broker script to remote node
-    ansible.builtin.copy:
-      src: join-broker.sh
-      dest: /root/join-broker.sh
-      mode: '0755'
+- include: prepare-k8s-cluster.yml
 
-- hosts: all
-  gather_facts: False
-  name: Setup k8s cluster
-  remote_user: root
-  timeout: 2000
-  tasks:
-  - name: Ensure knitnet-operator
-    ansible.builtin.shell: /root/setup-k8s-cluster.sh {{cluster_name}} {{pod_cidr}} {{service_cidr}} {{inventory_hostname}} > setup-k8s-cluster.log
+- include: deploy-knitnet-operator.yml
 
-- hosts: broker
-  name: Ensure broker cluster
-  gather_facts: False
-  remote_user: root
-  tasks:
-  - name: Deploy broker instance
-    ansible.builtin.shell: /root/deploy-broker.sh
+- include: deploy-broker.yml
 
-  - name: Save submariner-broker-info configmap to file
-    ansible.builtin.shell: kubectl -n knitnet-operator-system get cm submariner-broker-info -oyaml > /root/submariner-broker-info.yaml
-    retries: 10
-    delay: 10
-    register: result
-    until: result.rc == 0
-
-  - name: Copy submariner-broker-info configmap file to local
-    ansible.builtin.fetch:
-      src: /root/submariner-broker-info.yaml
-      dest: submariner-broker-info.yaml
-      flat: yes
-
-- hosts: managed
-  name: Copy submariner-broker-info configmap to managed cluster
-  gather_facts: False
-  remote_user: root
-  tasks:
-  - name: Copy submariner-broker-info configmap file to cluster {{ cluster_name }}
-    ansible.builtin.copy:
-      src: submariner-broker-info.yaml
-      dest: /root/submariner-broker-info.yaml
-      force: yes
-  - name: Create submariner-broker-info configmap in cluster {{ cluster_name }}
-    ansible.builtin.shell: |
-      kubectl delete -f /root/submariner-broker-info.yaml
-      kubectl apply -f /root/submariner-broker-info.yaml
-
-- hosts: all
-  name: Join managed cluster to broker
-  gather_facts: False
-  remote_user: root
-  tasks:
-  - name: Join cluster {{ cluster_name }} to broker cluster
-    ansible.builtin.shell: /root/join-broker.sh {{ cluster_name }}
+- include: join-broker.yml

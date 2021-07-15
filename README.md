@@ -31,7 +31,7 @@
     docker pull k8s.gcr.io/pause:3.2
     ```
 
-    在脚本 `setup-k8s-cluster.sh` 中找到 `PROXY_SERVER` 和 `PROXY_PORT`, 替换为你自己的代理 `IP` 和 `Port`
+    在`inventory` 文件中中找到 `PROXY_SERVER` 和 `PROXY_PORT`, 替换为你自己的代理 `IP` 和 `Port`
 
 1. Update `inventory` file template with your nodes IP
 

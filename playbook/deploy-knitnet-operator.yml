@@ -1,0 +1,17 @@
+- hosts: all
+  gather_facts: False
+  name: Deploy knitnet operator
+  remote_user: root
+  timeout: 100
+  tasks:
+  - name: Copy deploy knitnet script to remote node
+    ansible.builtin.copy:
+      src: scripts/deploy-knitnet.sh
+      dest: /root/deploy-knitnet.sh
+      mode: '0755'
+
+  - name: Deploy knitnet operator
+    ansible.builtin.shell:
+      PROXY_SERVER={{PROXY_SERVER}}
+      PROXY_PORT={{PROXY_PORT}}
+      /root/deploy-knitnet.sh > deploy-knitnet.log

@@ -65,13 +65,6 @@ install-pkgs() {
 
 prepare-pull-images() {
   add-docker-proxy
-  docker pull quay.io/danielxlee/knitnet-operator:latest
-  docker pull quay.io/submariner/submariner-operator:0.9.1
-  docker pull quay.io/submariner/lighthouse-coredns:0.9.1
-  docker pull quay.io/submariner/lighthouse-agent:0.9.1
-  docker pull quay.io/submariner/submariner-globalnet:0.9.1
-  docker pull quay.io/submariner/submariner-route-agent:0.9.1
-  docker pull quay.io/submariner/submariner-gateway:0.9.1
   docker pull quay.io/coreos/flannel:v0.14.0
   docker pull k8s.gcr.io/kube-proxy:v1.19.7
   docker pull k8s.gcr.io/kube-apiserver:v1.19.7
@@ -172,18 +165,6 @@ deploy-flannel() {
   sleep 120
 }
 
-deploy-knitnet() {
-  pushd /root
-  [[ ! -d knitnet-operator ]] && git clone https://github.com/tkestack/knitnet-operator.git
-  pushd knitnet-operator
-    set-proxy
-    make manifests
-    make kustomize
-    unset-proxy
-    make deploy
-  popd
-}
-
 set-proxy() {
   if [[ "X$PROXY_SERVER" != "X" ]]; then
     title "Set http/https proxy"
@@ -202,10 +183,9 @@ unset-proxy() {
 #------------------------------- main ----------------------------#
 
 #======================== Setup network proxy =======================#
-PROXY_SERVER=
-PROXY_PORT=8123
+PROXY_SERVER=${PROXY_SERVER:-}
+PROXY_PORT=${PROXY_PORT:-3128}
 #====================================================================#
-
 
 K8S_VERSION="v1.19.7"
 CNI_VERSION="v0.8.2"
@@ -238,7 +218,5 @@ init-kubeadm-cluster
 deploy-flannel
 
 remove-docker-proxy
-
-deploy-knitnet
 
 

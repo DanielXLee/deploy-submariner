@@ -1,0 +1,17 @@
+- hosts: all
+  gather_facts: False
+  name: Prepare kubernetes clusters
+  remote_user: root
+  timeout: 2000
+  tasks:
+  - name: Copy setup k8s cluster script to remote node
+    ansible.builtin.copy:
+      src: scripts/setup-k8s-cluster.sh
+      dest: /root/setup-k8s-cluster.sh
+      mode: '0755'
+
+  - name: Deploy k8s cluster
+    ansible.builtin.shell:
+      PROXY_SERVER={{PROXY_SERVER | default()}}
+      PROXY_PORT={{PROXY_PORT | default()}}
+      /root/setup-k8s-cluster.sh {{cluster_name}} {{pod_cidr}} {{service_cidr}} {{inventory_hostname}} > setup-k8s-cluster.log
