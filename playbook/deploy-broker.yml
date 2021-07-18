@@ -1,7 +1,5 @@
 - hosts: broker
-  gather_facts: False
   name: Deploy broker
-  remote_user: root
   timeout: 100
   tasks:
   - name: Copy deploy broker script to remote node
@@ -11,10 +9,10 @@
       mode: '0755'
 
   - name: Deploy broker
-    ansible.builtin.shell: /root/deploy-broker.sh > deploy-broker.log
+    ansible.builtin.shell: /root/deploy-broker.sh > /root/deploy-broker.log
 
   - name: Save submariner-broker-info configmap to file
-    ansible.builtin.shell: kubectl -n knitnet-operator-system get cm submariner-broker-info -oyaml > /root/submariner-broker-info.yaml
+    ansible.builtin.shell: kubectl -n submariner-k8s-broker get cm submariner-broker-info -oyaml > /root/submariner-broker-info.yaml
     retries: 10
     delay: 10
     register: result
@@ -28,8 +26,6 @@
 
 - hosts: managed
   name: Copy submariner-broker-info configmap to managed cluster
-  gather_facts: False
-  remote_user: root
   tasks:
   - name: Copy submariner-broker-info configmap file to cluster
     ansible.builtin.copy:
@@ -39,5 +35,6 @@
 
   - name: Create submariner-broker-info configmap in cluster
     ansible.builtin.shell: |
+      kubectl create ns submariner-k8s-broker
       kubectl delete -f /root/submariner-broker-info.yaml
       kubectl apply -f /root/submariner-broker-info.yaml

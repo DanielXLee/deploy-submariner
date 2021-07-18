@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 msg() {
   printf '%b\n' "$1"
@@ -16,30 +16,50 @@ title() {
   msg "\33[34m# ${1}\33[0m"
 }
 
-install-pkgs() {
+usage () {
+  local script="${0##*/}"
+  while read -r ; do echo "${REPLY}" ; done <<-EOF
+    Usage: ${script} [CLUSTER_NAME] [POD_CIDR] [SRVIECE_CIDR] [PUBLIC_IP]
+    Create k8s cluster with kubeadm
+    Examples:
+      1. Create a cluster-a:
+        ${script} cluster-a 10.44.0.0 10.45.0.0 <cluster-a-public-ip> 
+      2. Create a cluster-b:
+        ${script} cluster-b 10.144.0.0 10.145.0.0 <cluster-b-public-ip>
+      3. Create a cluster-c:
+        ${script} cluster-c 10.244.0.0 10.245.0.0 <cluster-c-public-ip>
+EOF
+}
+
+install-required-pkgs() {
   DOCKER=$(which docker 2>/dev/null)
-  if [[ "X$DOCKER" == "X" ]]; then
-    title "Installing docker socat golang-go packages"
+  GO=$(which go 2>/dev/null)
+  if [[ "X$DOCKER" == "X" || "X$GO" == "X" ]]; then
+    title "Installing docker socat golang-go ..."
     apt update && apt install docker.io conntrack socat golang-go -y
   fi
 
   KUBERADM=$(which kubeadm 2>/dev/null)
-  if [[ "X$KUBERADM" == "X" ]]; then
-    title "Installing kubeadm"
-    curl -o /usr/bin/kubeadm https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/amd64/kubeadm && chmod +x /usr/bin/kubeadm
-  fi
-
   KUBELET=$(which kubelet 2>/dev/null)
-  if [[ "X$KUBELET" == "X" ]]; then
-    title "Installing kubelet"
-    curl -o /usr/bin/kubelet https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/amd64/kubelet && chmod +x /usr/bin/kubelet
+  KUBECTL=$(which kubectl 2>/dev/null)
+  if [[ "X$KUBERADM" == "X" || "X$KUBELET" == "X" || "X$KUBECTL" == "X" ]]; then
+    title "Installing kubeadm, kubelet, kubectl with version: ${K8S_VERSION}"
+    curl -L --remote-name-all https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/amd64/{kubeadm,kubelet,kubectl}
+    chmod +x {kubeadm,kubelet,kubectl}
+    mv kubeadm kubelet kubectl /usr/bin/
   fi
 
-  KUBECTL=$(which kubectl 2>/dev/null)
-  if [[ "X$KUBECTL" == "X" ]]; then
-    title "Installing kubectl"
-    curl -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x /usr/bin/kubectl
-  fi
+  # KUBELET=$(which kubelet 2>/dev/null)
+  # if [[ "X$KUBELET" == "X" ]]; then
+  #   title "Installing kubelet version: ${K8S_VERSION}"
+  #   curl -o /usr/bin/kubelet https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/amd64/kubelet && chmod +x /usr/bin/kubelet
+  # fi
+
+  # KUBECTL=$(which kubectl 2>/dev/null)
+  # if [[ "X$KUBECTL" == "X" ]]; then
+  #   title "Installing kubectl version: ${K8S_VERSION}"
+  #   curl -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x /usr/bin/kubectl
+  # fi
 
   YQ=$(which yq 2>/dev/null)
   if [[ "X$YQ" == "X" ]]; then
@@ -51,15 +71,14 @@ install-pkgs() {
   if [[ ! -d /opt/cni ]]; then
     title "Installing cni plugin"
     mkdir -p /opt/cni/bin
-    wget -c  "https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-linux-amd64-${CNI_VERSION}.tgz" -O - | tar -C /opt/cni/bin -xz
+    wget -c "https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-linux-amd64-${CNI_VERSION}.tgz" -O - | tar -C /opt/cni/bin -xz
   fi
 
   SUBCTL=$(which subctl 2>/dev/null)
   if [[ "X$SUBCTL" == "X" ]]; then
     title "Installing subctl command"
     curl -Ls https://get.submariner.io | bash
-    echo "export PATH=\$PATH:~/.local/bin" >> ~/.bashrc
-    source ~/.bashrc
+    mv ~/.local/bin/subctl /usr/bin/
   fi
 }
 
@@ -165,6 +184,18 @@ deploy-flannel() {
   sleep 120
 }
 
+deploy-calico() {
+  title "Deploy calico"
+  [[ ! -f calico.yml ]] && curl -o calico.yml https://docs.projectcalico.org/manifests/calico.yaml
+  hostname=$(hostname)
+  master_name=$(echo ${hostname,,})
+  kubectl label node ${master_name} submariner.io/gateway=true
+  kubectl taint nodes --all node-role.kubernetes.io/master-
+  kubectl create -f calico.yml
+  msg "Waiting for the calico to boot up. This can take up to 1m0s"
+  sleep 60
+}
+
 set-proxy() {
   if [[ "X$PROXY_SERVER" != "X" ]]; then
     title "Set http/https proxy"
@@ -181,33 +212,31 @@ unset-proxy() {
   fi
 }
 #------------------------------- main ----------------------------#
+usage
 
 #======================== Setup network proxy =======================#
 PROXY_SERVER=${PROXY_SERVER:-}
 PROXY_PORT=${PROXY_PORT:-3128}
+NETWORK_PLUGIN=${NETWORK_PLUGIN:-flannel}
 #====================================================================#
 
-K8S_VERSION="v1.19.7"
+K8S_VERSION=${K8S_VERSION:-v1.19.7}
 CNI_VERSION="v0.8.2"
 CLUSTER_NAME=$1
 POD_CIDR=$2
 SERVICE_CIDR=$3
 PUBLIC_IP=$4
 
-msg "Example usage: ./setup-k8s-cluster.sh cluster-a 10.44.0.0 10.45.0.0 <cluster-a-public-ip>"
-msg "Example usage: ./setup-k8s-cluster.sh cluster-b 10.144.0.0 10.145.0.0 <cluster-b-public-ip>"
-msg "Example usage: ./setup-k8s-cluster.sh cluster-c 10.244.0.0 10.245.0.0 <cluster-c-public-ip>"
-
 [[ "X$CLUSTER_NAME" == "X" ]] && error "Miss cluster name" && exit 1
 [[ "X$POD_CIDR" == "X" ]] && error "Miss pod-cidr" && exit 1
 [[ "X$SERVICE_CIDR" == "X" ]] && error "Miss service-cidr" && exit 1
 [[ "X$PUBLIC_IP" == "X" ]] && error "Miss public ip" && exit 1
 
-# Prepare load docker images
-prepare-pull-images
-
 # Download kubeadm, kubelet, kubectl, flannel
-install-pkgs
+install-required-pkgs
+
+# Pre-requiredpare load docker images
+prepare-pull-images
 
 setup-docker
 
@@ -215,8 +244,8 @@ setup-kubelet
 
 init-kubeadm-cluster
 
-deploy-flannel
-
-remove-docker-proxy
-
-
+if [[ "$NETWORK_PLUGIN" == "calico" ]];then
+  deploy-calico
+else
+  deploy-flannel
+fi

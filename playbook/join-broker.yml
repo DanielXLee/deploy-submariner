@@ -1,7 +1,5 @@
 - hosts: all
-  gather_facts: False
   name: Join managed cluster to broker
-  remote_user: root
   timeout: 100
   tasks:
   - name: Copy join broker script to remote node
@@ -11,4 +9,4 @@
       mode: '0755'
 
   - name: Join to broker
-    ansible.builtin.shell: /root/join-broker.sh {{ cluster_name }}> join-broker.log
+    ansible.builtin.shell: /root/join-broker.sh {{ cluster_name }} > /root/join-broker.log

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 msg() {
   printf '%b\n' "$1"
@@ -59,14 +59,18 @@ remove-docker-proxy() {
 }
 
 deploy-knitnet() {
+  title "Deploy knitnet operator"
   pushd /root
   [[ ! -d knitnet-operator ]] && git clone https://github.com/tkestack/knitnet-operator.git
   pushd knitnet-operator
-    set-proxy
-    make manifests
-    make kustomize
-    unset-proxy
-    make deploy
+  title "Prepare go mod"
+  set-proxy
+  make manifests
+  make kustomize
+  unset-proxy
+  title "Install knitnet operator"
+  make deploy
+  popd
   popd
 }
 

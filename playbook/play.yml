@@ -1,8 +1,8 @@
 ---
-- include: prepare-k8s-cluster.yml
+- import_playbook: prepare-k8s-cluster.yml
 
-- include: deploy-knitnet-operator.yml
+- import_playbook: deploy-knitnet-operator.yml
 
-- include: deploy-broker.yml
+- import_playbook: deploy-broker.yml
 
-- include: join-broker.yml
+- import_playbook: join-broker.yml
