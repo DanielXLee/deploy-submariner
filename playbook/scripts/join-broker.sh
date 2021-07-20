@@ -20,6 +20,7 @@ join-broker() {
   pushd /root
   [[ ! -d knitnet-operator ]] && git clone https://github.com/tkestack/knitnet-operator.git
   pushd knitnet-operator
+  git pull
   sed -i "s|clusterID:.*|clusterID: ${CLUSTER_NAME}|g" config/samples/join_broker.yaml
   kubectl apply -f config/samples/join_broker.yaml
   popd

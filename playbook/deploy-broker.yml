@@ -1,6 +1,6 @@
 - hosts: broker
-  name: Deploy broker
-  timeout: 100
+  name: Deploy broker cluster
+  timeout: 200
   tasks:
   - name: Copy deploy broker script to remote node
     ansible.builtin.copy:
@@ -8,7 +8,7 @@
       dest: /root/deploy-broker.sh
       mode: '0755'
 
-  - name: Deploy broker
+  - name: Deploy broker on cluster
     ansible.builtin.shell: /root/deploy-broker.sh > /root/deploy-broker.log
 
   - name: Save submariner-broker-info configmap to file
@@ -25,9 +25,9 @@
       flat: yes
 
 - hosts: managed
-  name: Copy submariner-broker-info configmap to managed cluster
+  name: Ensure submariner-broker-info configmap on managed cluster
   tasks:
-  - name: Copy submariner-broker-info configmap file to cluster
+  - name: Copy submariner-broker-info configmap file to managed cluster
     ansible.builtin.copy:
       src: submariner-broker-info.yaml
       dest: /root/submariner-broker-info.yaml

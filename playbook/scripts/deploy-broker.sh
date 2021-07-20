@@ -20,7 +20,8 @@ deploy-broker() {
   pushd /root
   [[ ! -d knitnet-operator ]] && git clone https://github.com/tkestack/knitnet-operator.git
   pushd knitnet-operator
-  public_apiserver=$(kubectl config view  | grep server | cut -f 2- -d ":" | tr -d " ")
+  git pull
+  public_apiserver=$(kubectl config view | grep server | cut -f 2- -d ":" | tr -d " ")
   sed -i "s|publicAPIServerURL:.*|publicAPIServerURL: ${public_apiserver}|g" config/samples/deploy_broker.yaml
   kubectl apply -f config/samples/deploy_broker.yaml
   popd

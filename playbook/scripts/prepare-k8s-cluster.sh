@@ -49,18 +49,6 @@ install-required-pkgs() {
     mv kubeadm kubelet kubectl /usr/bin/
   fi
 
-  # KUBELET=$(which kubelet 2>/dev/null)
-  # if [[ "X$KUBELET" == "X" ]]; then
-  #   title "Installing kubelet version: ${K8S_VERSION}"
-  #   curl -o /usr/bin/kubelet https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/amd64/kubelet && chmod +x /usr/bin/kubelet
-  # fi
-
-  # KUBECTL=$(which kubectl 2>/dev/null)
-  # if [[ "X$KUBECTL" == "X" ]]; then
-  #   title "Installing kubectl version: ${K8S_VERSION}"
-  #   curl -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x /usr/bin/kubectl
-  # fi
-
   YQ=$(which yq 2>/dev/null)
   if [[ "X$YQ" == "X" ]]; then
     title "Installing yq"
@@ -68,11 +56,14 @@ install-required-pkgs() {
     wget https://github.com/mikefarah/yq/releases/download/v4.8.0/${BINARY} -O /usr/bin/yq &&  chmod +x /usr/bin/yq
   fi
 
-  if [[ ! -d /opt/cni ]]; then
-    title "Installing cni plugin"
-    mkdir -p /opt/cni/bin
-    wget -c "https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-linux-amd64-${CNI_VERSION}.tgz" -O - | tar -C /opt/cni/bin -xz
+  title "Installing cni plugin"
+  mkdir -p /opt/cni/bin
+  if [[ -f cni-plugins-linux-amd64-${CNI_VERSION}.tgz ]]; then
+    curl -L -o cni-plugins-linux-amd64-${CNI_VERSION}.tgz "https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-linux-amd64-${CNI_VERSION}.tgz"
   fi
+  tar -xz -C /opt/cni/bin -f cni-plugins-linux-amd64-${CNI_VERSION}.tgz
+
+
 
   SUBCTL=$(which subctl 2>/dev/null)
   if [[ "X$SUBCTL" == "X" ]]; then
@@ -84,7 +75,6 @@ install-required-pkgs() {
 
 prepare-pull-images() {
   add-docker-proxy
-  docker pull quay.io/coreos/flannel:v0.14.0
   docker pull k8s.gcr.io/kube-proxy:v1.19.7
   docker pull k8s.gcr.io/kube-apiserver:v1.19.7
   docker pull k8s.gcr.io/kube-scheduler:v1.19.7

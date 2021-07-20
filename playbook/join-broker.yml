@@ -1,12 +1,12 @@
 - hosts: all
-  name: Join managed cluster to broker
-  timeout: 100
+  name: Ensure managed cluster join to broker
+  timeout: 200
   tasks:
-  - name: Copy join broker script to remote node
+  - name: Copy join script to remote node
     ansible.builtin.copy:
       src: scripts/join-broker.sh
       dest: /root/join-broker.sh
       mode: '0755'
 
-  - name: Join to broker
+  - name: Join cluster to broker
     ansible.builtin.shell: /root/join-broker.sh {{ cluster_name }} > /root/join-broker.log

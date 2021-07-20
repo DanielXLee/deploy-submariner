@@ -63,12 +63,7 @@ deploy-knitnet() {
   pushd /root
   [[ ! -d knitnet-operator ]] && git clone https://github.com/tkestack/knitnet-operator.git
   pushd knitnet-operator
-  title "Prepare go mod"
-  set-proxy
-  make manifests
-  make kustomize
-  unset-proxy
-  title "Install knitnet operator"
+  go env -w GOPROXY=https://goproxy.cn,direct
   make deploy
   popd
   popd

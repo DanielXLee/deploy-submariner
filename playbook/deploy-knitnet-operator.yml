@@ -1,15 +1,15 @@
 - hosts: all
-  name: Deploy knitnet operator
+  name: Ensure knitnet operator on all clusters
   timeout: 200
   tasks:
   - name: Copy deploy knitnet script to remote node
     ansible.builtin.copy:
-      src: scripts/deploy-knitnet.sh
-      dest: /root/deploy-knitnet.sh
+      src: scripts/deploy-knitnet-operator.sh
+      dest: /root/deploy-knitnet-operator.sh
       mode: '0755'
 
   - name: Deploy knitnet operator
     ansible.builtin.shell:
       PROXY_SERVER={{PROXY_SERVER | default()}}
       PROXY_PORT={{PROXY_PORT | default()}}
-      /root/deploy-knitnet.sh > /root/deploy-knitnet.log
+      /root/deploy-knitnet-operator.sh > /root/deploy-knitnet-operator.log

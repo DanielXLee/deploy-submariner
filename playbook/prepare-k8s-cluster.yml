@@ -8,7 +8,7 @@
       dest: /root/prepare-k8s-cluster.sh
       mode: '0755'
 
-  - name: Deploy k8s cluster
+  - name: Deploy k8s cluster with kubeadm
     ansible.builtin.shell:
       PROXY_SERVER={{PROXY_SERVER | default()}}
       PROXY_PORT={{PROXY_PORT | default()}}
