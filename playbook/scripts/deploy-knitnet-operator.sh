@@ -18,6 +18,7 @@ title() {
 
 prepare-pull-images() {
   add-docker-proxy
+  docker pull quay.io/coreos/flannel:v0.14.0
   docker pull quay.io/danielxlee/knitnet-operator:latest
   docker pull quay.io/submariner/submariner-operator:0.9.1
   docker pull quay.io/submariner/lighthouse-coredns:0.9.1

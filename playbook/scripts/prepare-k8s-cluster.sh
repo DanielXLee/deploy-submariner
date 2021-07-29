@@ -58,7 +58,7 @@ install-required-pkgs() {
 
   title "Installing cni plugin"
   mkdir -p /opt/cni/bin
-  if [[ -f cni-plugins-linux-amd64-${CNI_VERSION}.tgz ]]; then
+  if [[ ! -f cni-plugins-linux-amd64-${CNI_VERSION}.tgz ]]; then
     curl -L -o cni-plugins-linux-amd64-${CNI_VERSION}.tgz "https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-linux-amd64-${CNI_VERSION}.tgz"
   fi
   tar -xz -C /opt/cni/bin -f cni-plugins-linux-amd64-${CNI_VERSION}.tgz
