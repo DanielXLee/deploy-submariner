@@ -2,7 +2,7 @@
 
 ## 部署之前
 
-1. 在本地机器安装 `ansible`
+1. 在本地机器安装 `ansible`, version >= 4
 
    - MacOS: `brew install ansible`
    - Ubuntu: [installing-ansible-on-ubuntu](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-on-ubuntu)
@@ -21,6 +21,7 @@
 
     ```shell
     git clone https://github.com/DanielXLee/deploy-submariner.git
+    cd deploy-submariner
     ```
 
 1. 如果你的远程节点不能访问外部的网络，需要设置一个代理服务，如果可以访问外网，则跳过此步骤
